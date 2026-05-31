@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+
+  simulations Simulation[]
+}
+
+model StrawWaste {
+  id                     Int      @id @default(autoincrement())
+  region                 String
+  amountTon              Float
+  biomassPotential       Float
+  utilizationPercentage  Float
+  createdAt              DateTime @default(now())
+}
+
+model Simulation {
+  id               Int      @id @default(autoincrement())
+  strawAmount      Float
+  biofuelResult    Float
+  carbonReduction  Float
+  createdAt        DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Article {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  category   String
+  thumbnail  String?
+  createdAt  DateTime @default(now())
+}
+
+model Region {
+  id              Int      @id @default(autoincrement())
+  regionName      String
+  latitude        Float
+  longitude       Float
+  strawPotential  Float
+  biomassPotential Float
+  createdAt       DateTime @default(now())
+}
