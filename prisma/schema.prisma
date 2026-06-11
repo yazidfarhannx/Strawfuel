@@ -26,8 +26,9 @@ model StrawWaste {
   id                     Int      @id @default(autoincrement())
   region                 String
   amountTon              Float
-  biomassPotential       Float
-  utilizationPercentage  Float
+  moisture               Float?
+  biomassPotential       Float?
+  utilizationPercentage  Float?
   createdAt              DateTime @default(now())
 }
 
@@ -48,6 +49,7 @@ model Article {
   content    String
   category   String
   thumbnail  String?
+  link       String?
   createdAt  DateTime @default(now())
 }
 
