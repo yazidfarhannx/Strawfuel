@@ -34,7 +34,7 @@ exports.createArticle = async (req, res) => {
     }
 
     const thumbnail = req.file
-      ? `/uploads/${req.file.filename}`
+      ? req.file.path
       : null;
 
     const article = await prisma.article.create({
@@ -149,7 +149,7 @@ exports.updateArticle = async (req, res) => {
     } = req.body;
 
     const thumbnail = req.file
-      ? `/uploads/${req.file.filename}`
+      ? req.file.path
       : existing.thumbnail;
 
     const updated = await prisma.article.update({

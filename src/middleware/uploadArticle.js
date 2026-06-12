@@ -1,37 +1,39 @@
 const multer = require('multer');
-const path = require('path');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads');
-  },
+const {
+  CloudinaryStorage,
+} = require(
+  'multer-storage-cloudinary'
+);
 
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + path.extname(file.originalname);
+const cloudinary = require(
+  '../config/cloudinary'
+);
 
-    cb(null, uniqueName);
-  },
-});
+const storage =
+  new CloudinaryStorage({
+    cloudinary,
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'image/png',
-    'image/jpeg',
-    'image/jpg',
-    'image/webp',
-  ];
+    params: async (req, file) => ({
+      folder: 'strawfuel',
 
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files allowed'), false);
-  }
-};
+      allowed_formats: [
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+      ],
+
+      public_id:
+        Date.now() +
+        '-' +
+        file.originalname,
+    }),
+  });
 
 const upload = multer({
   storage,
-  fileFilter,
+
   limits: {
     fileSize: 5 * 1024 * 1024,
   },

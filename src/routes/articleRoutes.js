@@ -24,13 +24,26 @@ router.get(
   articleController.getAllArticles
 );
 
-// ADMIN ONLY
+router.get(
+  '/:id',
+  articleController.getArticleById
+);
+
+// ADMIN
 router.post(
   '/',
   verifyToken,
   roleMiddleware(['admin']),
   upload.single('thumbnail'),
   articleController.createArticle
+);
+
+router.put(
+  '/:id',
+  verifyToken,
+  roleMiddleware(['admin']),
+  upload.single('thumbnail'),
+  articleController.updateArticle
 );
 
 router.delete(
