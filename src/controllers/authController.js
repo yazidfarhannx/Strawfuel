@@ -139,13 +139,20 @@ exports.verifyRegisterOtp =
     }
   };
 
-exports.login = async (req, res) => {
+exports.login = async (
+  req,
+  res
+) => {
   try {
-    const { email, password } = req.body;
+    const {
+      email,
+      password,
+    } = req.body;
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user =
+      await prisma.user.findUnique({
+        where: { email },
+      });
 
     if (!user) {
       return res.status(404).json({
@@ -153,6 +160,7 @@ exports.login = async (req, res) => {
       });
     }
 
+    // CHECK VERIFIED
     if (!user.isVerified) {
       return res.status(401).json({
         message:
@@ -160,10 +168,12 @@ exports.login = async (req, res) => {
       });
     }
 
-    const validPassword = await bcrypt.compare(
-      password,
-      user.password
-    );
+    // CHECK PASSWORD
+    const validPassword =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
     if (!validPassword) {
       return res.status(401).json({
@@ -171,74 +181,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // GENERATE OTP
-    const otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
-
-    // SAVE OTP
-    await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-
-      data: {
-        otpCode: otp,
-
-        otpExpiredAt: new Date(
-          Date.now() + 5 * 60 * 1000
-        ),
-      },
-    });
-
-    // SEND EMAIL
-    await sendEmail(
-      user.email,
-      'Your StrawFuel OTP Code',
-      `Your OTP Code is ${otp}`
-    );
-
-    res.json({
-      message:
-        'OTP sent to your email',
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-};
-
-exports.verifyOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found',
-      });
-    }
-
-    if (user.otpCode !== otp) {
-      return res.status(400).json({
-        message: 'Invalid OTP',
-      });
-    }
-
-    if (
-      new Date() > user.otpExpiredAt
-    ) {
-      return res.status(400).json({
-        message: 'OTP expired',
-      });
-    }
-
+    // GENERATE JWT
     const token = jwt.sign(
       {
         id: user.id,
@@ -252,21 +195,13 @@ exports.verifyOtp = async (req, res) => {
       }
     );
 
-    await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-
-      data: {
-        otpCode: null,
-        otpExpiredAt: null,
-      },
-    });
-
     delete user.password;
 
     res.json({
+      message: 'Login success',
+
       token,
+
       user,
     });
   } catch (error) {
