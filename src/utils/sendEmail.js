@@ -5,10 +5,16 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // HARUS APP PASSWORD
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS, // HARUS APP PASSWORD
   },
+    tls: {
+    rejectUnauthorized: false
+  }
 });
+
+console.log("SMTP USER:", process.env.SMTP_USER);
+console.log("SMTP PASS OK:", !!process.env.SMTP_PASS);
 
 const sendEmail = async (
   to,
@@ -108,7 +114,7 @@ const sendEmail = async (
 
     const info =
       await transporter.sendMail({
-        from: `"StrawFuel Security" <${process.env.EMAIL_USER}>`,
+        from: `"StrawFuel Security" <${process.env.SMTP_USER}>`,
 
         to,
 
