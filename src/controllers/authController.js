@@ -59,7 +59,7 @@ exports.register = async (
         otpCode: otp,
 
         otpExpiredAt: new Date(
-          Date.now() + 5 * 60 * 1000
+          Date.now() + 30 * 60 * 1000
         ),
       },
     });
@@ -243,7 +243,7 @@ exports.forgotPassword = async (
         otpCode: otp,
 
         otpExpiredAt: new Date(
-          Date.now() + 5 * 60 * 1000
+          Date.now() + 30 * 60 * 1000
         ),
       },
     });
