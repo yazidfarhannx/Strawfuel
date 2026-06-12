@@ -7,14 +7,6 @@ const otpGenerator = require('otp-generator');
 const sendEmail = require(
   '../utils/sendEmail'
 );
-const otpGenerator = require(
-  'otp-generator'
-);
-
-const sendEmail = require(
-  '../utils/sendEmail'
-);
-
 
 const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
