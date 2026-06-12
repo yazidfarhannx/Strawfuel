@@ -20,9 +20,14 @@ const sendEmail = async (
         subject,
 
         html: `
-          <div>
-            <h2>${subject}</h2>
-            <p>${text}</p>
+          <div style="font-family:sans-serif">
+            <h1>StrawFuel OTP</h1>
+
+            <p>Kode OTP Anda:</p>
+
+            <h2>${text}</h2>
+
+            <p>Berlaku 15 menit.</p>
           </div>
         `,
       });
