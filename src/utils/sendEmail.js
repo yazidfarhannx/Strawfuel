@@ -10,31 +10,35 @@ const sendEmail = async (
   text
 ) => {
   try {
+    console.log('SEND TO:', to);
+
     const response =
       await resend.emails.send({
-        from:
-          'onboarding@resend.dev',
+        from: 'onboarding@resend.dev',
 
-        to,
+        to: [to],
 
         subject,
 
         html: `
-          <div style="font-family:sans-serif">
-            <h1>StrawFuel OTP</h1>
-
-            <p>Kode OTP Anda:</p>
-
-            <h2>${text}</h2>
-
-            <p>Berlaku 15 menit.</p>
-          </div>
+          <h1>${subject}</h1>
+          <p>${text}</p>
         `,
       });
 
-    console.log(response);
+    console.log(
+      'RESEND RESPONSE:',
+      response
+    );
+
+    return response;
   } catch (error) {
-    console.log(error);
+    console.log(
+      'RESEND ERROR:',
+      error
+    );
+
+    throw error;
   }
 };
 
