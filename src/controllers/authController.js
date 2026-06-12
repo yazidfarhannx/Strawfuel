@@ -4,76 +4,43 @@ const { Pool } = require('pg');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const { PrismaClient } = require('@prisma/client');
 const otpGenerator = require('otp-generator');
-const sendEmail = require(
-  '../utils/sendEmail'
-);
+const sendEmail = require('../utils/sendEmail');
 
 const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-
-exports.register = async (
-  req,
-  res
-) => {
+// REGISTER (Tanpa OTP)
+exports.register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-    } = req.body;
+    const { name, email, password } = req.body;
 
     // CHECK USER
-    const existingUser =
-      await prisma.user.findUnique({
-        where: { email },
-      });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
     if (existingUser) {
       return res.status(400).json({
-        message:
-          'Email already registered',
+        message: 'Email already registered',
       });
     }
 
     // HASH PASSWORD
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // GENERATE OTP
-    const otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
-
-    // CREATE USER
+    // CREATE USER DIRECTLY
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-
-        otpCode: otp,
-
-        otpExpiredAt: new Date(
-          Date.now() + 30 * 60 * 1000
-        ),
       },
     });
 
-    // SEND OTP EMAIL
-    await sendEmail(
-      email,
-      'StrawFuel Password Reset OTP',
-      otp
-    );
-
     res.status(201).json({
-      message:
-        'OTP verification sent to email',
+      message: 'Registration successful',
     });
   } catch (error) {
     res.status(500).json({
@@ -82,77 +49,14 @@ exports.register = async (
   }
 };
 
-exports.verifyRegisterOtp =
-  async (req, res) => {
-    try {
-      const { email, otp } = req.body;
-
-      const user =
-        await prisma.user.findUnique({
-          where: { email },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message: 'User not found',
-        });
-      }
-
-      if (user.otpCode !== otp) {
-        return res.status(400).json({
-          message: 'Invalid OTP',
-        });
-      }
-
-      if (
-        new Date() >
-        user.otpExpiredAt
-      ) {
-        return res.status(400).json({
-          message: 'OTP expired',
-        });
-      }
-
-      // VERIFIED
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-
-        data: {
-          isVerified: true,
-
-          otpCode: null,
-
-          otpExpiredAt: null,
-        },
-      });
-
-      res.json({
-        message:
-          'Account verified successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: error.message,
-      });
-    }
-  };
-
-exports.login = async (
-  req,
-  res
-) => {
+// LOGIN (Tanpa Cek isVerified)
+exports.login = async (req, res) => {
   try {
-    const {
-      email,
-      password,
-    } = req.body;
+    const { email, password } = req.body;
 
-    const user =
-      await prisma.user.findUnique({
-        where: { email },
-      });
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -160,20 +64,8 @@ exports.login = async (
       });
     }
 
-    // CHECK VERIFIED
-    if (!user.isVerified) {
-      return res.status(401).json({
-        message:
-          'Please verify your email first',
-      });
-    }
-
     // CHECK PASSWORD
-    const validPassword =
-      await bcrypt.compare(
-        password,
-        user.password
-      );
+    const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(401).json({
@@ -187,9 +79,7 @@ exports.login = async (
         id: user.id,
         role: user.role,
       },
-
       process.env.JWT_SECRET,
-
       {
         expiresIn: '7d',
       }
@@ -199,9 +89,7 @@ exports.login = async (
 
     res.json({
       message: 'Login success',
-
       token,
-
       user,
     });
   } catch (error) {
@@ -211,10 +99,8 @@ exports.login = async (
   }
 };
 
-exports.forgotPassword = async (
-  req,
-  res
-) => {
+// FORGOT PASSWORD (Menerima OTP)
+exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -238,25 +124,16 @@ exports.forgotPassword = async (
       where: {
         id: user.id,
       },
-
       data: {
         otpCode: otp,
-
-        otpExpiredAt: new Date(
-          Date.now() + 30 * 60 * 1000
-        ),
+        otpExpiredAt: new Date(Date.now() + 30 * 60 * 1000), // 30 Menit
       },
     });
 
-    await sendEmail(
-      user.email,
-      'Reset Password OTP',
-      otp
-    );
+    await sendEmail(user.email, 'Reset Password OTP', otp);
 
     res.json({
-      message:
-        'Reset OTP sent to email',
+      message: 'Reset OTP sent to email',
     });
   } catch (error) {
     res.status(500).json({
@@ -265,16 +142,10 @@ exports.forgotPassword = async (
   }
 };
 
-exports.resetPassword = async (
-  req,
-  res
-) => {
+// RESET PASSWORD (Validasi OTP)
+exports.resetPassword = async (req, res) => {
   try {
-    const {
-      email,
-      otp,
-      newPassword,
-    } = req.body;
+    const { email, otp, newPassword } = req.body;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -292,14 +163,19 @@ exports.resetPassword = async (
       });
     }
 
-    const hashedPassword =
-      await bcrypt.hash(newPassword, 10);
+    // Tambahan Validasi Expired OTP
+    if (new Date() > user.otpExpiredAt) {
+      return res.status(400).json({
+        message: 'OTP expired',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
       where: {
         id: user.id,
       },
-
       data: {
         password: hashedPassword,
         otpCode: null,
@@ -308,8 +184,7 @@ exports.resetPassword = async (
     });
 
     res.json({
-      message:
-        'Password reset successful',
+      message: 'Password reset successful',
     });
   } catch (error) {
     res.status(500).json({

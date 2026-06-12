@@ -17,7 +17,7 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("user")
-  isVerified    Boolean  @default(false)
+  isVerified    Boolean  @default(true)
   otpCode       String?
   otpExpiredAt  DateTime?
   createdAt DateTime @default(now())
