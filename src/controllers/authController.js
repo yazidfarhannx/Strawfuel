@@ -67,8 +67,8 @@ exports.register = async (
     // SEND OTP EMAIL
     await sendEmail(
       email,
-      'Verify Your StrawFuel Account',
-      `Your OTP verification code is ${otp}`
+      'StrawFuel Password Reset OTP',
+      otp
     );
 
     res.status(201).json({
@@ -251,7 +251,7 @@ exports.forgotPassword = async (
     await sendEmail(
       user.email,
       'Reset Password OTP',
-      `Your reset OTP is ${otp}`
+      otp
     );
 
     res.json({
