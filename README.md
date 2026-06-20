@@ -1,5 +1,5 @@
 ````md
-# StrawFuel Backend API
+StrawFuel Backend API
 
 StrawFuel is a sustainability platform for monitoring rice straw biomass, carbon emission analytics, and biofuel potential management.
 
@@ -13,9 +13,9 @@ Built using:
 
 ---
 
-# Features
+Features
 
-## User Features
+User Features
 - JWT Authentication
 - Dashboard Analytics
 - Carbon Emission Analytics
@@ -24,7 +24,7 @@ Built using:
 - Biomass Region Map
 - Educational Articles
 
-## Admin Features
+Admin Features
 - User Management
 - Role Management
 - Article Management
@@ -33,7 +33,7 @@ Built using:
 
 ---
 
-# Technology Stack
+Technology Stack
 
 - Node.js
 - Express.js
